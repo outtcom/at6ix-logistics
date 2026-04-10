@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Claude Code local settings
+.claude/
+
+# Temporary screenshots (generated, not source)
+temporary screenshots/
+
+# Environment
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
