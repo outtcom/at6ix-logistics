@@ -1,91 +1,88 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this repository.
 
 ---
 
 ## Project Overview
 
-AT6 Transport is a frontend-only website project. The output is a static HTML/CSS site with no build pipeline — all styles are inline or in a companion `styles.css`, delivered via Tailwind CDN.
+**AT6ix Logistics** — a static multi-page marketing website for a Toronto-based logistics company. No build pipeline. All styles are inline within each HTML file, delivered via Tailwind CDN.
+
+**GitHub:** https://github.com/outtcom/at6ix-logistics
 
 ---
 
 ## Always Do First
-- **Invoke the `frontend-design` skill** before writing any frontend code, every session, no exceptions.
+- **Invoke the `ui-ux-pro-max` skill** before writing any frontend code, every session.
 
-## Reference Images
-- If a reference image is provided: match layout, spacing, typography, and color exactly. Swap in placeholder content (images via `https://placehold.co/`, generic copy). Do not improve or add to the design.
-- If no reference image: design from scratch with high craft (see guardrails below).
-- Screenshot your output, compare against reference, fix mismatches, re-screenshot. Do at least 2 comparison rounds. Stop only when no visible differences remain or user says so.
+## Pages
+| File | Purpose |
+|------|---------|
+| `index.html` | Homepage — video hero, services list, fleet, freight, coverage map, quote form |
+| `services.html` | Services detail page |
+| `fleet.html` | Fleet page (Box Trucks, Sprinter Vans, Cargo Vans, Flatbeds, Specialized) |
+| `freight.html` | Freight page (Skidded, Appliances, Construction, Steel, Windows) |
+
+## Brand
+- **Primary red:** `#B8112A` (hover: `#9A0E23`)
+- **Dark:** `#0A0A0A`
+- **Light bg:** `#FAFAFA` / `#F3F3F4`
+- **Headings:** `Oswald` (500/600/700) — Google Fonts
+- **Body:** `DM Sans` (400/500/600/700) — Google Fonts
+- Logo: `AT 6 - logo.png` (root directory)
+- No `brand_assets/` folder — all assets live in the project root
 
 ## Local Server
-- **Always serve on localhost** — never screenshot a `file:///` URL.
-- Start the dev server: `node serve.mjs` (serves the project root at `http://localhost:3000`)
-- `serve.mjs` lives in the project root. Start it in the background before taking any screenshots.
-- If the server is already running, do not start a second instance.
+- Start: `node serve.mjs` (serves root at `http://localhost:3000`)
+- **Never screenshot a `file:///` URL — always use localhost.**
+- If server is already running, do not start a second instance.
 
 ## Screenshot Workflow
-- Puppeteer is installed at `C:/Users/Fahad/AppData/Local/Temp/puppeteer-test/`. Chrome cache is at `C:/Users/Fahad/.cache/puppeteer/`.
-- **Always screenshot from localhost:** `node screenshot.mjs http://localhost:3000`
-- Screenshots are saved automatically to `./temporary screenshots/screenshot-N.png` (auto-incremented, never overwritten).
-- Optional label suffix: `node screenshot.mjs http://localhost:3000 label` → saves as `screenshot-N-label.png`
-- `screenshot.mjs` lives in the project root. Use it as-is.
-- After screenshotting, read the PNG from `temporary screenshots/` with the Read tool — Claude can see and analyze the image directly.
-- When comparing, be specific: "heading is 32px but reference shows ~24px", "card gap is 16px but should be 24px"
-- Check: spacing/padding, font size/weight/line-height, colors (exact hex), alignment, border-radius, shadows, image sizing
+- Chrome executable: `C:/Users/Fahad/.cache/puppeteer/chrome/win64-146.0.7680.153/chrome-win64/chrome.exe`
+- Run: `node screenshot.mjs http://localhost:3000 [label]`
+- Output: `./temporary screenshots/screenshot-N[-label].png` (auto-incremented)
+- Mobile audit: use Puppeteer with `width:390, height:844, isMobile:true, deviceScaleFactor:2`
+- After screenshotting, read the PNG with the Read tool and analyse it directly.
 
-## Output Defaults
-- Single `index.html` file, all styles inline, unless user says otherwise
-- Tailwind CSS via CDN: `<script src="https://cdn.tailwindcss.com"></script>`
-- Placeholder images: `https://placehold.co/WIDTHxHEIGHT`
-- Mobile-first responsive
+## Mobile Rules
+- **Verified clean at 390px** — no horizontal overflow.
+- Always test mobile after layout changes.
+- `min-width: auto` on flex/grid children causes Safari overflow — always add `min-w-0` to direct children with fixed widths.
+- Hover-only interactions don't fire on touch — provide static affordances (opacity, visible arrows) for mobile.
+- Use `height: 100svh` (not `100vh`) for full-screen sections on mobile.
 
-## Brand Assets
-- Always check the `brand_assets/` folder before designing. It may contain logos, color guides, style guides, or images.
-- If assets exist there, use them. Do not use placeholders where real assets are available.
-- If a logo is present, use it. If a color palette is defined, use those exact values — do not invent brand colors.
+## Tailwind CDN Cascade
+- Tailwind CDN injects its `<style>` after the page loads — it wins any specificity tie with inline styles.
+- Any CSS that must override Tailwind **must use `!important`**.
+- Applies to: `flex-direction`, `width`, `display`, `padding`, `font-size`.
+
+## Hooks (enabled)
+Hooks are configured in `.claude/settings.local.json`:
+- **PostToolUse on Edit/Write**: After editing any `.html` file, the hook ensures the dev server is running (starts it if not).
+- **PreToolUse on Bash(screenshot)**: Verified server is up before screenshotting.
+
+## Deployment
+- **Git remote:** `https://github.com/outtcom/at6ix-logistics.git`
+- Branch: `main`
+- Push after every significant change: `git add -A && git commit -m "..." && git push origin main`
+
+## AEO (Answer Engine Optimization)
+- `llms.txt` at root — readable by AI crawlers (Perplexity, ChatGPT, etc.), not linked from any visible page element.
+- FAQPage JSON-LD in `<head>` of every page.
+- BreadcrumbList JSON-LD on subpages.
+- LocalBusiness JSON-LD on `index.html`.
+- Do NOT add visible links to `llms.txt` anywhere on the site.
 
 ## Anti-Generic Guardrails
-- **Colors:** Never use default Tailwind palette (indigo-500, blue-600, etc.). Pick a custom brand color and derive from it.
-- **Shadows:** Never use flat `shadow-md`. Use layered, color-tinted shadows with low opacity.
-- **Typography:** Never use the same font for headings and body. Pair a display/serif with a clean sans. Apply tight tracking (`-0.03em`) on large headings, generous line-height (`1.7`) on body.
-- **Gradients:** Layer multiple radial gradients. Add grain/texture via SVG noise filter for depth.
-- **Animations:** Only animate `transform` and `opacity`. Never `transition-all`. Use spring-style easing.
-- **Interactive states:** Every clickable element needs hover, focus-visible, and active states. No exceptions.
-- **Images:** Add a gradient overlay (`bg-gradient-to-t from-black/60`) and a color treatment layer with `mix-blend-multiply`.
-- **Spacing:** Use intentional, consistent spacing tokens — not random Tailwind steps.
-- **Depth:** Surfaces should have a layering system (base → elevated → floating), not all sit at the same z-plane.
-
-## MCP Servers
-- **Context7** is installed. Use `use context7` in prompts to fetch live, version-accurate docs for any library (Tailwind, Alpine, GSAP, etc.).
-
-## Tailwind CDN Cascade — Critical Rule
-
-**Tailwind CDN injects its `<style>` tag via JavaScript AFTER `styles.css` loads.** For any property where both files set the same specificity, Tailwind wins because it appears later in the cascade.
-
-**Rule: any CSS in `styles.css` that must override Tailwind utility classes MUST use `!important`.**
-
-This applies to:
-- Layout-critical properties: `flex-direction`, `width`, `display`, `padding`, `font-size`
-- Any rule that has previously been defeated by Tailwind on mobile (i.e. the fix "worked in DevTools but not on device")
-
-**Apply `!important` to overrides for classes like** `.sticky-call-bar` buttons, `.hero-cta-group` flex-direction/width/min-width/max-width.
-
-**Cache-busting:** When `styles.css` changes, bump the `?v=N` query string on the `<link>` tag in every HTML file that references it.
-
-## Mobile Overflow — min-width: auto on Flex and Grid Items
-
-**This is a recurring Safari/iPhone bug pattern.** Both flex items and grid items default to `min-width: auto`, meaning they expand to fit their content even when an explicit `width` is set. This causes elements to overflow the viewport.
-
-**Always add `min-w-0` (`min-width: 0`) to:**
-- Any direct child of a `flex` container that has a fixed or percentage width
-- Any direct child of a `grid` container whose content (e.g. a marquee, long text, wide SVG) has a large intrinsic width
-
-**Also:** `width: max-content` elements like `.marquee-track` must be inside a container with `overflow: hidden` AND `max-width: 100%` to prevent them from inflating parent intrinsic widths in Safari.
+- **Colors:** Never use default Tailwind palette (indigo-500, blue-600). Use `#B8112A` as primary.
+- **Shadows:** Layered, color-tinted (`rgba(184,17,42,0.35)`), not flat `shadow-md`.
+- **Typography:** Oswald for headings (tight tracking `-0.04em`), DM Sans for body (line-height 1.7).
+- **Animations:** Only animate `transform` and `opacity`. Never `transition-all`.
+- **Interactive states:** hover + focus-visible + active on every clickable element.
 
 ## Hard Rules
-- Do not add sections, features, or content not in the reference
-- Do not "improve" a reference design — match it
-- Do not stop after one screenshot pass
 - Do not use `transition-all`
 - Do not use default Tailwind blue/indigo as primary color
+- Do not stop after one screenshot pass — always verify visually
+- Do not add content or sections the user hasn't asked for
+- Do not commit `.claude/` directory (it's gitignored)
