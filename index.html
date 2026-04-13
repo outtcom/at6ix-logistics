@@ -1309,7 +1309,7 @@
           <!-- Right: Form -->
           <div>
         <div class="quote-form-card" style="background:#FFFFFF; border:1.5px solid rgba(0,0,0,0.07); border-left:4px solid #B8112A; border-radius:0.75rem; padding:2.5rem; box-shadow:0 4px 24px rgba(0,0,0,0.06), 0 20px 60px rgba(0,0,0,0.04);">
-          <form class="space-y-5" action="#" method="post" novalidate aria-label="Request a logistics quote">
+          <form id="quote-form" class="space-y-5" action="#" method="post" novalidate aria-label="Request a logistics quote">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
@@ -1688,6 +1688,80 @@
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       gsap.globalTimeline.timeScale(100);
     }
+
+    // ── Quote Form — Google Apps Script submission ─────────────────────────
+    (function () {
+      var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrZ7U2XSpZc8q9wfJ8xn6Cjt0xNJS8s2znL5THMEbGQ--PRNH6Z2aIBp2I_UH5tq1emA/exec';
+
+      var form = document.getElementById('quote-form');
+      if (!form) return;
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // Basic client-side required-field check
+        var required = form.querySelectorAll('[required]');
+        var valid = true;
+        required.forEach(function (el) {
+          el.style.borderColor = '';
+          if (!el.value.trim()) {
+            el.style.borderColor = '#B8112A';
+            valid = false;
+          }
+        });
+        if (!valid) return;
+
+        var btn = form.querySelector('[type="submit"]');
+        var originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Sending&hellip;';
+        btn.style.opacity = '0.7';
+
+        var params = new URLSearchParams({
+          name:    form.querySelector('[name="name"]').value.trim(),
+          company: form.querySelector('[name="company"]').value.trim(),
+          phone:   form.querySelector('[name="phone"]').value.trim(),
+          email:   form.querySelector('[name="email"]').value.trim(),
+          service: form.querySelector('[name="service"]').value,
+          message: form.querySelector('[name="message"]').value.trim()
+        });
+
+        try {
+          var res  = await fetch(SCRIPT_URL + '?' + params.toString());
+          var data = await res.json();
+
+          if (data.success) {
+            // Replace form with success message
+            form.innerHTML = [
+              '<div style="text-align:center; padding:2.5rem 1rem;">',
+              '  <div style="width:56px; height:56px; background:#B8112A; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.25rem;">',
+              '    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+              '  </div>',
+              '  <p style="font-family:Oswald,sans-serif; font-size:1.375rem; font-weight:600; color:#0A0A0A; margin:0 0 0.5rem;">Request Received!</p>',
+              '  <p style="font-family:DM Sans,sans-serif; font-size:0.9375rem; color:#555; line-height:1.7; margin:0;">',
+              '    Thank you — our team will follow up with you shortly.',
+              '  </p>',
+              '</div>'
+            ].join('');
+          } else {
+            throw new Error(data.error || 'Unknown error');
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
+          btn.style.opacity = '';
+          // Show inline error banner
+          var existing = form.querySelector('.form-error-banner');
+          if (!existing) {
+            var banner = document.createElement('p');
+            banner.className = 'form-error-banner';
+            banner.style.cssText = 'color:#B8112A; font-size:0.875rem; text-align:center; margin-top:0.25rem;';
+            banner.textContent = 'Something went wrong. Please try again or call us directly.';
+            btn.insertAdjacentElement('afterend', banner);
+          }
+        }
+      });
+    })();
   </script>
 </body>
 </html>
